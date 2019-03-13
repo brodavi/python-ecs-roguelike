@@ -1,13 +1,26 @@
 import libtcodpy as libtcod
 
+from components import *
 
-def initialize_fov(game_map):
-    fov_map = libtcod.map_new(game_map.width, game_map.height)
+import initial_data as init
 
-    for y in range(game_map.height):
-        for x in range(game_map.width):
-            libtcod.map_set_properties(fov_map, x, y, not game_map.tiles[x][y].block_sight,
-                                       not game_map.tiles[x][y].blocked)
+from ecs_world import ecs_world
+getc = ecs_world.component_for_entity
+
+import game_map
+
+def should_block_sight(entity):
+    return (getc(entity, Solid).solid > 0.75) and (getc(entity, Opacity).opacity > 0.75)
+
+def should_block_passing(entity):
+    return (getc(entity, Solid).solid > 0.75) and (getc(entity, Size).size > 0.75)
+
+def initialize_fov():
+    fov_map = libtcod.map_new(init.map_width, init.map_height)
+
+    for y in range(init.map_height):
+        for x in range(init.map_width):
+            libtcod.map_set_properties(fov_map, x, y, not should_block_sight(game_map.tiles[x][y]), not should_block_passing(game_map.tiles[x][y]))
 
     return fov_map
 
