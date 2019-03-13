@@ -1,15 +1,21 @@
 import libtcodpy as libtcod
 
+import initial_data as init
 
-def initialize_fov(game_map):
-    fov_map = libtcod.map_new(game_map.width, game_map.height)
+def can_see_through(entity):
+    """Can this entity be seen through?"""
+    return (entity['Solid'] < 0.75) or (entity['Opacity'] < 0.75)
 
-    for y in range(game_map.height):
-        for x in range(game_map.width):
-            libtcod.map_set_properties(fov_map, x, y, not game_map.tiles[x][y].block_sight,
-                                       not game_map.tiles[x][y].blocked)
+def can_pass_through(entity):
+    """Can this entity be passed through?"""
+    return (entity['Solid'] < 0.75) or (entity['Size'] < 0.75)
 
+fov_map = None
+def make_fov_map(tiles):
+    """Take the list of tiles and feed it to libtcod to generate the fov_map, taking into account tiles that block sight"""
+    global fov_map
+    fov_map = libtcod.map_new(init.map_width, init.map_height)
+
+    for tile in tiles:
+        libtcod.map_set_properties(fov_map, tile['Position']['x'], tile['Position']['y'], can_see_through(tile), can_pass_through(tile))
     return fov_map
-
-def recompute_fov(fov_map, x, y, radius, light_walls=True, algorithm=0):
-    libtcod.map_compute_fov(fov_map, x, y, radius, light_walls, algorithm)
